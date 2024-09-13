@@ -20,12 +20,12 @@ class RecintosZoo {
         };
     }
     analisaRecintos(animal, quantidade) {
-
+        /* validando se o animal existe no zoologico */
         const infoAnimal = this.animaisInfo[animal.toLowerCase()];
         if (!infoAnimal) {
             return { erro: "Animal inválido"}
         }
-
+       /* validando a quantidade */
         if (quantidade <= 0) {
             return { erro: "Quantidade inválida!"}
         }
@@ -34,47 +34,77 @@ class RecintosZoo {
         /* criando array de recintos que são viáveis */
         const recintosViaveis = [];
 
+        if (animal.toLowerCase() === 'crocodilo') {
+            const recinto4 = this.recintos.find(r => r.numero === 4);
+            let espacoOcupado = 0;
+    
+            recinto4.animais.forEach(an => {
+                const infoEspecie = this.animaisInfo[an.especie.toLowerCase()];
+                espacoOcupado += infoEspecie.tamanho * an.quantidade;
+            });
+        }
+
         /* Itera sobre cada recinto para verificar se ele é adequado para o animal */
         this.recintos.forEach((recinto) => {
-            let espacoOcupado = 0;
-            let carnivoroPresente = false;
-            let mesmoTipoCarnivoro = true;
+            let espacoOcupado = 0; /* controle do espaço ocupado no recinto */
+            let carnivoroPresente = false; /* flag para verificar se há carnívoros no recinto */
+            let mesmoTipoCarnivoro = true; /* verifica se o carnivoro presente é da mesma espécie */
 
-        
-        recintos.animais.forEach((an) => {
+        /* verifica os animais que já estão no recinto */
+        recinto.animais.forEach((an) => {
 
         const { especie, quantidade: qtd } = an;
         const infoEspecie = this.animaisInfo[especie.toLowerCase()]
-        espacoOcupado += infoEspecie.tamanho * qtd;
+        espacoOcupado += infoEspecie.tamanho * qtd; /* calcula o espaço ocupado pelos animais */
        
+        /* se houver carnívoro, verifica se é da mesma espécie */
         if (infoEspecie.carnivoro) {
             carnivoroPresente = true;
             if (especie.toLowerCase() !== animal.toLowerCase()) {
-                mesmoTipoCarnivoro = false;
+                mesmoTipoCarnivoro = false; /* se for outro carnívoro, o recinto não será viável */
             }
         }
     });
   
-
+   /* verifica o campo necessário */
     const campoNecessario = tamanho * quantidade;
     const espacoDisponivel = recinto.tamanhoTotal - espacoOcupado;
-    const espacoComExtra = espacoNecessario + (recinto.animais.length > 0 ? 1 : 0);
+    const espacoComExtra = campoNecessario + (recinto.animais.length > 0 ? 1 : 0);
 
-    const biomaAdequado = biomas.includes(recinto.bioma)
-
+    /* regra para verificar bioma adequado */
+    const biomaAdequado = biomas.some(bioma => recinto.bioma.includes(bioma));
+    /* verificação de carnívoros */
     const carnivoroOk = !(carnivoro && carnivoroPresente && !mesmoTipoCarnivoro);
+    /* verifica espaço suficiente */
     const espacoSuficiente = espacoComExtra <= espacoDisponivel;
+    /* verificação de hipopotamo e macacos */
     const hipopotamoOk = animal.toLowerCase() === 'hipopotamo' && recinto.bioma === 'savana e rio'
     const macacoOk = animal.toLowerCase() === 'macaco' && recinto.animais.length > 0;
 
     if (biomaAdequado && carnivoroOk && espacoSuficiente) {
         if (animal.toLowerCase() === 'hipopotamo' && !hipopotamoOk) return;
         if (animal.toLowerCase() === 'macaco' && !macacoOk) return;
+    
 
         recintosViaveis.push(`Recinto ${recinto.numero} (espaço livre: ${espacoDisponivel - espacoComExtra} total: ${recinto.tamanhoTotal})`)
+        
      }
    });
+   
+   if (recintosViaveis.length === 0) {
+    return { erro: "Não há recinto viável"}
+   }
+  /* Ordena a lista de recintos viáveis pelo número do recinto */
+  recintosViaveis.sort((a, b) => a.numero - b.numero);
+
+  /* Retorna apenas a descrição dos recintos viáveis */
+  return {recintosViaveis}
   }
 }
 
 export { RecintosZoo as RecintosZoo };
+
+const zoo = new RecintosZoo();
+console.log(zoo.analisaRecintos("macaco", 2));
+console.log(zoo.analisaRecintos("unicórnio", 1))
+console.log(zoo.analisaRecintos("hipopotamo", 3))
